@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="description"
-        content="Deformable Neural Radiance Fields creates free-viewpoint portraits (nerfies) from casually captured videos.">
-  <meta name="keywords" content="Nerfies, D-NeRF, NeRF">
+        content="GeoMon is a lightweight location-based RPG where players explore real-world maps, tap icons to battle enemies, and earn rewards. Unlike AR-heavy games, it offers quick, 2D turn-based fights for fun, accessible on-the-go gameplay.">
+  <meta name="keywords" content="GeoMon">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nerfies: Deformable Neural Radiance Fields</title>
+  <title>GeoMon</title>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
-  <script>
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script> -->
+  <!-- <script>
     window.dataLayer = window.dataLayer || [];
 
     function gtag() {
@@ -20,7 +20,7 @@
     gtag('js', new Date());
 
     gtag('config', 'G-PYVRSFMDRL');
-  </script>
+  </script> -->
 
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
         rel="stylesheet">
@@ -32,7 +32,7 @@
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="icon" href="./static/images/favicon.svg">
+  <!-- <link rel="icon" href="./static/images/favicon.svg"> -->
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
@@ -42,83 +42,35 @@
 </head>
 <body>
 
-<nav class="navbar" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
-  <div class="navbar-menu">
-    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
-      <a class="navbar-item" href="https://keunhong.com">
-      <span class="icon">
-          <i class="fas fa-home"></i>
-      </span>
-      </a>
-
-      <div class="navbar-item has-dropdown is-hoverable">
-        <a class="navbar-link">
-          More Research
-        </a>
-        <div class="navbar-dropdown">
-          <a class="navbar-item" href="https://hypernerf.github.io">
-            HyperNeRF
-          </a>
-          <a class="navbar-item" href="https://nerfies.github.io">
-            Nerfies
-          </a>
-          <a class="navbar-item" href="https://latentfusion.github.io">
-            LatentFusion
-          </a>
-          <a class="navbar-item" href="https://photoshape.github.io">
-            PhotoShape
-          </a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</nav>
-
-
 <section class="hero">
   <div class="hero-body">
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Nerfies: Deformable Neural Radiance Fields</h1>
+          <h1 class="title is-1 publication-title">GeoMon</h1>
           <div class="is-size-5 publication-authors">
             <span class="author-block">
-              <a href="https://keunhong.com">Keunhong Park</a><sup>1</sup>,</span>
+              Quang Minh Dinh,</span>
             <span class="author-block">
-              <a href="https://utkarshsinha.com">Utkarsh Sinha</a><sup>2</sup>,</span>
+              Duc Long Nguyen,</span>
             <span class="author-block">
-              <a href="https://jonbarron.info">Jonathan T. Barron</a><sup>2</sup>,
+              Brandon Arai,
             </span>
             <span class="author-block">
-              <a href="http://sofienbouaziz.com">Sofien Bouaziz</a><sup>2</sup>,
+              Daniel Schlitt Ujvary,
             </span>
             <span class="author-block">
-              <a href="https://www.danbgoldman.com">Dan B Goldman</a><sup>2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="https://homes.cs.washington.edu/~seitz/">Steven M. Seitz</a><sup>1,2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="http://www.ricardomartinbrualla.com">Ricardo Martin-Brualla</a><sup>2</sup>
+              Yizhang Zhu,
             </span>
           </div>
 
           <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>University of Washington,</span>
-            <span class="author-block"><sup>2</sup>Google Research</span>
+            <span class="author-block">{qmd, dln3, baa45, dsa202, yza673}@sfu.ca,</span>
           </div>
 
-          <div class="column has-text-centered">
+          <!-- <div class="column has-text-centered">
             <div class="publication-links">
-              <!-- PDF Link. -->
+              PDF Link.
               <span class="link-block">
                 <a href="https://arxiv.org/pdf/2011.12948"
                    class="external-link button is-normal is-rounded is-dark">
@@ -137,7 +89,7 @@
                   <span>arXiv</span>
                 </a>
               </span>
-              <!-- Video Link. -->
+              Video Link.
               <span class="link-block">
                 <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
                    class="external-link button is-normal is-rounded is-dark">
@@ -147,7 +99,7 @@
                   <span>Video</span>
                 </a>
               </span>
-              <!-- Code Link. -->
+              Code Link.
               <span class="link-block">
                 <a href="https://github.com/google/nerfies"
                    class="external-link button is-normal is-rounded is-dark">
@@ -157,7 +109,7 @@
                   <span>Code</span>
                   </a>
               </span>
-              <!-- Dataset Link. -->
+              Dataset Link.
               <span class="link-block">
                 <a href="https://github.com/google/nerfies/releases/tag/0.1"
                    class="external-link button is-normal is-rounded is-dark">
@@ -168,31 +120,28 @@
                   </a>
             </div>
 
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="hero teaser">
+<!-- <section class="hero teaser">
   <div class="container is-max-desktop">
     <div class="hero-body">
+     <iframe width="560" height="315" src="https://www.youtube.com/embed/O8q0oeOwNfc?si=QBwW4l7qufgSQxUu" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+     
       <video id="teaser" autoplay muted loop playsinline height="100%">
         <source src="./static/videos/teaser.mp4"
                 type="video/mp4">
       </video>
-      <h2 class="subtitle has-text-centered">
-        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
-        free-viewpoint
-        portraits.
-      </h2>
     </div>
   </div>
-</section>
+</section> -->
 
 
-<section class="hero is-light is-small">
+<!-- <section class="hero is-light is-small">
   <div class="hero-body">
     <div class="container">
       <div id="results-carousel" class="carousel results-carousel">
@@ -247,21 +196,29 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 
 
-<section class="section">
+<section class="section" style="padding-top: 0;">
   <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="publication-video">
+          <!-- <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->
+          <iframe src="https://www.youtube.com/embed/O8q0oeOwNfc?si=9Skv45NDox8k1bbN" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
     <!-- Abstract. -->
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
+        <!-- <h2 class="title is-3">Abstract</h2> -->
         <div class="content has-text-justified">
           <p>
-            We present the first method capable of photorealistically reconstructing a non-rigidly
-            deforming scene using photos/videos captured casually from mobile phones.
+            GeoMon is a lightweight location-based RPG where players explore real-world maps, tap icons to battle enemies, and earn rewards. Unlike AR-heavy games, it offers quick, 2D turn-based fights for fun, accessible on-the-go gameplay.
           </p>
-          <p>
+          <!-- <p>
             Our approach augments neural radiance fields
             (NeRF) by optimizing an
             additional continuous volumetric deformation field that warps each observed point into a
@@ -283,7 +240,7 @@
             images of the same pose at different viewpoints. We show that our method faithfully
             reconstructs non-rigidly deforming scenes and reproduces unseen views with high
             fidelity.
-          </p>
+          </p> -->
         </div>
       </div>
     </div>
@@ -292,10 +249,11 @@
     <!-- Paper video. -->
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3">Video</h2>
+        <h2 class="title is-3">MVVM diagram</h2>
         <div class="publication-video">
-          <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
-                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          <img src="./static/images/MVVM.png"
+                 class="interpolation-image"
+                 alt="MVVM diagram"/>
         </div>
       </div>
     </div>
@@ -304,12 +262,12 @@
 </section>
 
 
-<section class="section">
+<!-- <section class="section">
   <div class="container is-max-desktop">
 
     <div class="columns is-centered">
 
-      <!-- Visual Effects. -->
+      Visual Effects.
       <div class="column">
         <div class="content">
           <h2 class="title is-3">Visual Effects</h2>
@@ -323,9 +281,9 @@
           </video>
         </div>
       </div>
-      <!--/ Visual Effects. -->
+      / Visual Effects.
 
-      <!-- Matting. -->
+      Matting.
       <div class="column">
         <h2 class="title is-3">Matting</h2>
         <div class="columns is-centered">
@@ -343,14 +301,13 @@
         </div>
       </div>
     </div>
-    <!--/ Matting. -->
+    / Matting.
 
-    <!-- Animation. -->
+    Animation.
     <div class="columns is-centered">
       <div class="column is-full-width">
         <h2 class="title is-3">Animation</h2>
 
-        <!-- Interpolating. -->
         <h3 class="title is-4">Interpolating states</h3>
         <div class="content has-text-justified">
           <p>
@@ -382,9 +339,7 @@
           </div>
         </div>
         <br/>
-        <!--/ Interpolating. -->
 
-        <!-- Re-rendering. -->
         <h3 class="title is-4">Re-rendering the input video</h3>
         <div class="content has-text-justified">
           <p>
@@ -403,15 +358,14 @@
                     type="video/mp4">
           </video>
         </div>
-        <!--/ Re-rendering. -->
 
       </div>
-    </div>
+    </div> -->
     <!--/ Animation. -->
 
 
     <!-- Concurrent Work. -->
-    <div class="columns is-centered">
+    <!-- <div class="columns is-centered">
       <div class="column is-full-width">
         <h2 class="title is-3">Related Links</h2>
 
@@ -434,14 +388,14 @@
           </p>
         </div>
       </div>
-    </div>
+    </div> -->
     <!--/ Concurrent Work. -->
 
-  </div>
-</section>
+  <!-- </div>
+</section> -->
 
 
-<section class="section" id="BibTeX">
+<!-- <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
     <h2 class="title">BibTeX</h2>
     <pre><code>@article{park2021nerfies,
@@ -451,12 +405,12 @@
   year      = {2021},
 }</code></pre>
   </div>
-</section>
+</section> -->
 
 
 <footer class="footer">
   <div class="container">
-    <div class="content has-text-centered">
+    <!-- <div class="content has-text-centered">
       <a class="icon-link"
          href="./static/videos/nerfies_paper.pdf">
         <i class="fas fa-file-pdf"></i>
@@ -464,21 +418,12 @@
       <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
         <i class="fab fa-github"></i>
       </a>
-    </div>
+    </div> -->
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
           <p>
-            This website is licensed under a <a rel="license"
-                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-          <p>
-            This means you are free to borrow the <a
-              href="https://github.com/nerfies/nerfies.github.io">source code</a> of this website,
-            we just ask that you link back to this page in the footer.
-            Please remember to remove the analytics code included in the header of the website which
-            you do not want on your website.
+            We thank the authors of <a href="https://nerfies.github.io/">Nerfies</a> that kindly open sourced the template of this website.
           </p>
         </div>
       </div>
