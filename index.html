@@ -68,10 +68,9 @@
             <span class="author-block">{qmd, dln3, baa45, dsa202, yza673}@sfu.ca,</span>
           </div>
 
-          <!-- <div class="column has-text-centered">
+          <div class="column has-text-centered">
             <div class="publication-links">
-              PDF Link.
-              <span class="link-block">
+              <!-- <span class="link-block">
                 <a href="https://arxiv.org/pdf/2011.12948"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
@@ -88,9 +87,8 @@
                   </span>
                   <span>arXiv</span>
                 </a>
-              </span>
-              Video Link.
-              <span class="link-block">
+              </span> -->
+              <!-- <span class="link-block">
                 <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
@@ -98,10 +96,9 @@
                   </span>
                   <span>Video</span>
                 </a>
-              </span>
-              Code Link.
+              </span> -->
               <span class="link-block">
-                <a href="https://github.com/google/nerfies"
+                <a href="https://github.com/quangminhdinh/geomon_cmpt362"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fab fa-github"></i>
@@ -109,18 +106,17 @@
                   <span>Code</span>
                   </a>
               </span>
-              Dataset Link.
               <span class="link-block">
-                <a href="https://github.com/google/nerfies/releases/tag/0.1"
+                <a href="https://drive.google.com/file/d/11E72c-jh-Uvl3XAWyY4n_NCVVEqpYJ2t/view?usp=sharing"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
-                      <i class="far fa-images"></i>
+                      <i class="fa fa-mobile-alt"></i>
                   </span>
-                  <span>Data</span>
+                  <span>Demo 2</span>
                   </a>
             </div>
 
-          </div> -->
+          </div>
         </div>
       </div>
     </div>
@@ -206,7 +202,7 @@
         <div class="publication-video">
           <!-- <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
                   frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->
-          <iframe src="https://www.youtube.com/embed/O8q0oeOwNfc?si=9Skv45NDox8k1bbN" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <iframe src="https://www.youtube.com/embed/kmky_mS402U?si=xJfqc1okdlHQb7Hs" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
       </div>
     </div>
@@ -244,7 +240,177 @@
         </div>
       </div>
     </div>
+
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Demo 1 video</h2>
+        <div class="publication-video">
+          <!-- <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->
+          <iframe src="https://www.youtube.com/embed/O8q0oeOwNfc?si=9Skv45NDox8k1bbN" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
     <!--/ Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Threaded Design Diagram</h2>
+      </div>
+    </div>
+
+    <pre>
+                          ┌─────────────────────────────────────────────────────┐
+                          │                    UI THREAD                        │
+                          │                (Main / Looper Main)                 │
+                          └─────────────────────────────────────────────────────┘
+                                          ▲                 ▲
+                                          │                 │
+                                          │                 │
+                               UI Updates │                 │ LiveData Observers
+                                          │                 │
+┌─────────────────────────┐               │                 │             ┌─────────────────────────┐
+│       MainActivity      │───────────────┘                 └────────────>│      ViewModels         │
+│ - onCreate              │                                               │ - LiveData observers    │
+└─────────────────────────┘                                               │ - Tracking Handler      │
+                                                                          └─────────────────────────┘
+┌─────────────────────────┐
+│      HomeFragment       │
+│ - onCreateView          │
+│ - onMapReady            │
+│ - updateMap             │
+│ - add markers           │
+└─────────────────────────┘
+          ▲
+          │ Marker clicks, map updates
+          │
+┌─────────────────────────┐
+│     BattleActivity      │
+│ - onCreate              │
+│ - UI updates            │
+│ - button clicks         │
+│ - coroutine delays      │
+└─────────────────────────┘
+
+          ▲
+          │ Handler messages (main thread)
+          │
+┌─────────────────────────┐
+│ TrackingMessageHandler  │
+│   (Looper.getMainLooper)│
+└─────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+                 BACKGROUND THREADS (COROUTINES / ROOM / MONSTER GEN)
+───────────────────────────────────────────────────────────────────────────────
+
+            ┌─────────────────────────────┐
+            │      Dispatchers.IO         │
+            │ (Coroutine thread pool)     │
+            └─────────────────────────────┘
+                    ▲                          ▲                    ▲
+                    │                          │                    │
+    HomeFragment background work               │                    │
+    ┌─────────────────────────────┐        Room DB                  │
+    │ lifecycleScope.launch(IO)   │       auto-threading            │
+    │ - Seeder.run()              │        ┌──────────────────────────┐
+    │ - load stat.json            │◄──────►│ SpeciesDao (suspend)     │
+    │ - parse moves/species       │        │ - upsertAll()            │
+    │ - generateAndUploadMonsters │        │ - upsertMoves()          │
+    │ - fetchNearbyMonsters       │        │ - getById()              │
+    └─────────────────────────────┘        │ - getAll()               │
+                                           │ - countSpecies()         │
+SpeciesRepository                          └──────────────────────────┘
+┌──────────────────────────────────────────┐
+│ clear() → CoroutineScope(IO).launch      │──► IO THREAD
+│ getAllSpecies() (Flow)                   │◄── ROOM THREAD
+│ upsertAll(), upsertMoves() (suspend)     │──► ROOM THREAD
+│ seedIfEmpty()                            │──► IO THREAD
+└──────────────────────────────────────────┘
+
+Seeder
+┌─────────────────────────────────────────────┐
+│ run(context, repo)                          │
+│ - withContext(IO)                           │──► JSON parsing thread
+│ - load raw/stat.json                        │
+│ - construct Species + Moves objects         │
+│ - insert via repository (Room → IO thread)  │
+└─────────────────────────────────────────────┘
+
+
+Monster Companion Object
+┌──────────────────────────────────────────┐
+│ initializeByName(name)                   │
+│   - DB lookup (Room on IO)               │
+│   - fallback to JSON load                │
+│ fetchById(id)                            │
+│   - suspendCoroutine                     │
+│   - Firebase .get()                      │──► Firebase threadpool
+│   - continuation.resume() on main thread │──► MAIN THREAD
+└──────────────────────────────────────────┘
+
+
+Battle Logic (background portions)
+┌──────────────────────────────────────────┐
+│ BattleActivity                           │
+│   lifecycleScope.launch {                │
+│      - fetch player monster (Firebase)   │──► Firebase thread
+│      - fetch enemy monster (Firebase)    │──► Firebase thread
+│      - delay(1000)                       │──► Default dispatcher
+│   }                                      │
+└──────────────────────────────────────────┘
+
+
+───────────────────────────────────────────────────────────────────────────────
+                      FIREBASE THREADS (NETWORK OPERATIONS)
+───────────────────────────────────────────────────────────────────────────────
+
+                   ┌─────────────────────────────────────────┐
+                   │ Firebase Internal Worker Threadpool     │
+                   └─────────────────────────────────────────┘
+                            ▲                     ▲
+                            │                     │
+         Monster.fetchById()│                     │ Firebase Listeners
+         ┌──────────────────────────────┐         ┌──────────────────────────────┐
+         │ suspendCoroutine             │         │ addListenerForSingleValue    │
+         │ - reference.child(id).get()  │         │   - get user's monsters      │
+         │ - SuccessListener runs here  │         │   - checkIfSpawnMonster      │
+         │ - onComplete → main thread   │         │   - load battle data         │
+         └──────────────────────────────┘         └──────────────────────────────┘
+
+
+User Firebase Functions
+┌──────────────────────────────────────────┐
+│ User.fetchById()                          │──► Firebase thread
+│ User.addMonster()                         │──► Firebase write thread
+│ User.updateLocation()                     │──► Firebase write thread
+│ AuthManager.signInAnonymously()           │──► Firebase Auth thread
+└──────────────────────────────────────────┘
+
+
+───────────────────────────────────────────────────────────────────────────────
+                           LOCATION SERVICE THREADING
+───────────────────────────────────────────────────────────────────────────────
+
+GPS/Location Provider Thread
+┌──────────────────────────────────────────┐
+│ TrackingService                          │
+│ - onStartCommand()                       │
+│ - requestLocationUpdates()               │
+│   (callback on NON-UI location thread)   │
+└──────────────────────────────────────────┘
+                    │
+                    ▼
+     TrackingMessageHandler (MAIN THREAD)
+     │ - handler.receiveMessage()  
+     │ - updates TrackingViewModel._latLng  
+     ▼
+UI THREAD observes latLng updates → Map auto-updates
+    </pre>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+      </div>
+    </div>
 
     <!-- Paper video. -->
     <div class="columns is-centered has-text-centered">
