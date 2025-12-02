@@ -259,8 +259,7 @@
       </div>
     </div>
 
-    <pre>
-                          ┌─────────────────────────────────────────────────────┐
+    <pre>                          ┌─────────────────────────────────────────────────────┐
                           │                    UI THREAD                        │
                           │                (Main / Looper Main)                 │
                           └─────────────────────────────────────────────────────┘
@@ -270,38 +269,54 @@
                                UI Updates │                 │ LiveData Observers
                                           │                 │
 ┌─────────────────────────┐               │                 │             ┌─────────────────────────┐
-│       MainActivity      │───────────────┘                 └────────────>│      ViewModels         │
-│ - onCreate              │                                               │ - LiveData observers    │
-└─────────────────────────┘                                               │ - Tracking Handler      │
-                                                                          └─────────────────────────┘
-┌─────────────────────────┐
-│      HomeFragment       │
-│ - onCreateView          │
-│ - onMapReady            │
-│ - updateMap             │
-│ - add markers           │
+│       MainActivity      │───────────────┘                 └────────────>│   TrackingViewModel     │
+│ - onCreate              │                                               │ - LiveData<LatLng>      │
+│ - onResume              │                                               │ - serviceStarted        │
+│ - onMapReady            │                                               │ - TrackingHandler       │
+│ - updateMap             │                                               │   (Looper.Main)         │
+│ - displayOtherPlayers   │                                               └─────────────────────────┘
+│ - handlePlayerClick     │
+│ - setupDuelListener     │
+│ - showDuelDialog        │
+│ - createBattleState     │
+│ - launchBattle          │
+│ - marker clicks         │
+│ - heartbeat handler     │
+│   (30s intervals)       │
 └─────────────────────────┘
           ▲
-          │ Marker clicks, map updates
+          │ UI interactions
           │
-┌─────────────────────────┐
-│     BattleActivity      │
-│ - onCreate              │
-│ - UI updates            │
-│ - button clicks         │
-│ - coroutine delays      │
-└─────────────────────────┘
+┌─────────────────────────┐   ┌─────────────────────────┐   ┌─────────────────────────┐
+│     BattleActivity      │   │  MonsterChatDialog      │   │   BagActivity           │
+│ - onCreate              │   │ - onCreate              │   │ - loadUserBag           │
+│ - setupMoveButtons      │   │ - sendMessage           │   │ - onItemClicked         │
+│ - onPlayerMoveSelected  │   │ - GeminiAPI calls       │   │ - openHealTarget        │
+│ - handlePvPMove         │   │ - chat UI updates       │   │ - openLevelUpTarget     │
+│ - handlePvEMove         │   └─────────────────────────┘   └─────────────────────────┘
+│ - performAttack         │
+│ - checkBattleEnd        │   ┌─────────────────────────┐   ┌─────────────────────────┐
+│ - setupBattleListener   │   │  HealTargetActivity     │   │  AllTargetActivity      │
+│ - updateHpFromState     │   │ - loadDamagedMonsters   │   │ - loadAllMonsters       │
+│ - coroutine delays      │   │ - onMonsterClicked      │   │ - onMonsterClicked      │
+│ - lastMoveTimestamp     │   │ - heal & Firebase sync  │   │ - levelUp & sync        │
+└─────────────────────────┘   └─────────────────────────┘   └─────────────────────────┘
 
-          ▲
-          │ Handler messages (main thread)
-          │
-┌─────────────────────────┐
-│ TrackingMessageHandler  │
-│   (Looper.getMainLooper)│
-└─────────────────────────┘
+┌─────────────────────────┐   ┌─────────────────────────┐   ┌─────────────────────────┐
+│   PokedexActivity       │   │  MonsterInfoActivity    │   │  MenuDialogFragment     │
+│ - loadUserMonsters      │   │ - fetchById (coroutine) │   │ - openMonsterChat       │
+│ - launch MonsterInfo    │   │ - bindMonster           │   │ - launch activities     │
+└─────────────────────────┘   │ - setBattle button      │   └─────────────────────────┘
+                              └─────────────────────────┘
+┌─────────────────────────┐   ┌─────────────────────────┐
+│ ChangeAvatarDialog      │   │  PlayerStatsDialog      │
+│ - image picker          │   │ - fetchById user        │
+│ - Firebase Storage      │   │ - fetchById monster     │
+│ - Glide avatar load     │   │ - Glide avatar load     │
+└─────────────────────────┘   └─────────────────────────┘
 
 ───────────────────────────────────────────────────────────────────────────────
-                 BACKGROUND THREADS (COROUTINES / ROOM / MONSTER GEN)
+                 BACKGROUND THREADS (COROUTINES / ROOM / FIREBASE)
 ───────────────────────────────────────────────────────────────────────────────
 
             ┌─────────────────────────────┐
@@ -310,56 +325,141 @@
             └─────────────────────────────┘
                     ▲                          ▲                    ▲
                     │                          │                    │
-    HomeFragment background work               │                    │
+    MainActivity.onCreate background work      │                    │
     ┌─────────────────────────────┐        Room DB                  │
     │ lifecycleScope.launch(IO)   │       auto-threading            │
-    │ - Seeder.run()              │        ┌──────────────────────────┐
-    │ - load stat.json            │◄──────►│ SpeciesDao (suspend)     │
-    │ - parse moves/species       │        │ - upsertAll()            │
-    │ - generateAndUploadMonsters │        │ - upsertMoves()          │
-    │ - fetchNearbyMonsters       │        │ - getById()              │
-    └─────────────────────────────┘        │ - getAll()               │
-                                           │ - countSpecies()         │
-SpeciesRepository                          └──────────────────────────┘
+    │ - signInAnonymously()       │        ┌──────────────────────────┐
+    │ - Seeder.run()              │◄──────►│ SpeciesDao (suspend)     │
+    │ - load stats.json           │        │ - upsertAll()            │
+    │ - load moves.json           │        │ - upsertMoves()          │
+    │ - load items.json           │        │ - upsertItems()          │
+    │ - parse species/moves/items │        │ - getById()              │
+    │ - User.fetchById()          │        │ - getAll()               │
+    │ - Monster.fetchById()       │        │ - getByIdNow()           │
+    │ - Monster.initializeByName()│        │ - getMoveByIdNow()       │
+    │ - User.createOrUpdate()     │        │ - getItemByDisplayName() │
+    │ - generateAndUploadMonsters │        │ - countSpecies()         │
+    │ - fetchNearbyMonsters       │        └──────────────────────────┘
+    └─────────────────────────────┘
+
+SpeciesRepository
 ┌──────────────────────────────────────────┐
 │ clear() → CoroutineScope(IO).launch      │──► IO THREAD
 │ getAllSpecies() (Flow)                   │◄── ROOM THREAD
 │ upsertAll(), upsertMoves() (suspend)     │──► ROOM THREAD
-│ seedIfEmpty()                            │──► IO THREAD
+│ upsertItems() (suspend)                  │──► ROOM THREAD
+│ countSpecies() (suspend)                 │──► ROOM THREAD
 └──────────────────────────────────────────┘
 
 Seeder
 ┌─────────────────────────────────────────────┐
 │ run(context, repo)                          │
 │ - withContext(IO)                           │──► JSON parsing thread
-│ - load raw/stat.json                        │
-│ - construct Species + Moves objects         │
+│ - load raw/stats.json                       │
+│ - load raw/moves.json                       │
+│ - load raw/items.json                       │
+│ - construct Species/Move/Item objects       │
 │ - insert via repository (Room → IO thread)  │
 └─────────────────────────────────────────────┘
-
 
 Monster Companion Object
 ┌──────────────────────────────────────────┐
 │ initializeByName(name)                   │
 │   - DB lookup (Room on IO)               │
-│   - fallback to JSON load                │
+│   - fallback to default                  │
+│   - levelScaling calculation             │
+│   - Firebase push & setValue             │──► Firebase thread
 │ fetchById(id)                            │
 │   - suspendCoroutine                     │
 │   - Firebase .get()                      │──► Firebase threadpool
+│   - fromSnapshot parsing                 │
+│   - levelScaling on result               │
 │   - continuation.resume() on main thread │──► MAIN THREAD
+│ setOwner(monsterId, ownerId)             │──► Firebase thread
+│ takeDamage(damage)                       │
+│   - syncHpToFirebase()                   │──► Firebase thread
+│ healDamage(amount)                       │
+│   - syncHpToFirebase()                   │──► Firebase thread
+│ levelUp(amount)                          │
+│   - levelScaling(this)                   │
+│   - syncHpToFirebase()                   │──► Firebase thread
 └──────────────────────────────────────────┘
 
+Move Companion Object
+┌──────────────────────────────────────────┐
+│ initializeByName(context, name)          │
+│   - DB lookup (Room on IO)               │──► Room thread
+│   - fallback to hardcoded moves          │
+│   - fromEntity conversion                │
+└──────────────────────────────────────────┘
+
+Item Companion Object
+┌──────────────────────────────────────────┐
+│ searchByDisplayName(context, name)       │
+│   - DB lookup (Room on IO)               │──► Room thread
+│   - fromEntity conversion                │
+│ returnAffect()                           │
+│   - effect parsing logic                 │
+└──────────────────────────────────────────┘
 
 Battle Logic (background portions)
 ┌──────────────────────────────────────────┐
 │ BattleActivity                           │
 │   lifecycleScope.launch {                │
-│      - fetch player monster (Firebase)   │──► Firebase thread
-│      - fetch enemy monster (Firebase)    │──► Firebase thread
-│      - delay(1000)                       │──► Default dispatcher
+│      - Monster.fetchById() (player)      │──► Firebase thread
+│      - Monster.fetchById() (opponent)    │──► Firebase thread
+│      - Move.initializeByName()           │──► Room thread
+│      - damageCalc()                      │──► Calculation (current thread)
+│      - performAttack()                   │
+│      - delay(800-1000ms)                 │──► Default dispatcher
+│      - checkBattleEnd()                  │
+│      - giveVictoryRewards()              │
+│      - handlePvPVictory()                │
+│      - handlePvPDefeat()                 │
 │   }                                      │
+│                                          │
+│ PvP-specific:                            │
+│   - setupBattleStateListener()           │
+│      - ValueEventListener                │──► Firebase thread
+│      - onDataChange callback             │──► Main thread
+│      - updateHpFromBattleState()         │
+│      - lastProcessedMoveTimestamp check  │
+│   - handlePvPMoveSelection()             │
+│      - performAttack()                   │
+│      - BattleState.updateHpAndNextTurn() │──► Firebase thread
 └──────────────────────────────────────────┘
 
+───────────────────────────────────────────────────────────────────────────────
+                              SPAWN SYSTEM THREADING
+───────────────────────────────────────────────────────────────────────────────
+
+Monster Spawning
+┌──────────────────────────────────────────┐
+│ MainActivity.checkAndSpawnMonsters()     │
+│   - Firebase addListenerForSingleValue   │──► Firebase thread
+│   - onDataChange callback                │──► Main thread
+│   - count nearby monsters                │
+│   - if < threshold:                      │
+│     generateAndUploadMonsters()          │
+│       - lifecycleScope.launch(IO)        │──► IO thread
+│       - for each monster:                │
+│         Monster.initializeByName()       │──► Room + Firebase
+│   - displayMonstersOnMap()               │──► Main thread
+│     - add markers to GoogleMap           │
+└──────────────────────────────────────────┘
+
+Item Spawning
+┌──────────────────────────────────────────┐
+│ ItemSpawner.generateItemsAround()        │
+│   - deterministic grid-based generation  │──► Current thread
+│   - uses seeded Random per grid cell     │
+│   - returns List<ItemSpawn>              │
+│                                          │
+│ MainActivity.checkAndSpawnItems()        │──► Main thread
+│   - calls ItemSpawner.generateItems()    │
+│   - displayItemsOnMap()                  │
+│     - add markers to GoogleMap           │
+└──────────────────────────────────────────┘
 
 ───────────────────────────────────────────────────────────────────────────────
                       FIREBASE THREADS (NETWORK OPERATIONS)
@@ -370,23 +470,94 @@ Battle Logic (background portions)
                    └─────────────────────────────────────────┘
                             ▲                     ▲
                             │                     │
-         Monster.fetchById()│                     │ Firebase Listeners
-         ┌──────────────────────────────┐         ┌──────────────────────────────┐
-         │ suspendCoroutine             │         │ addListenerForSingleValue    │
-         │ - reference.child(id).get()  │         │   - get user's monsters      │
-         │ - SuccessListener runs here  │         │   - checkIfSpawnMonster      │
-         │ - onComplete → main thread   │         │   - load battle data         │
-         └──────────────────────────────┘         └──────────────────────────────┘
+         Monster operations │                     │ User/Auth operations
+         ┌──────────────────────────────┐         ┌───────────────────────────────────────┐
+         │ Monster.fetchById()          │         │ User.fetchById()                      │
+         │ - suspendCoroutine           │         │   - Firebase .get()                   │
+         │ - reference.child(id).get()  │         │   - fromSnapshot parsing              │
+         │ - fromSnapshot               │         │ User.createOrUpdate()                 │
+         │ - SuccessListener runs here  │         │   - Firebase setValue()               │
+         │ - resume on main thread      │         │ User.updateLocation()                 │
+         │                              │         │   - Firebase updateChildren().        │
+         │ Monster.initializeByName()   │         │ User.updateLastActive()               │
+         │ - Firebase push().setValue() │         │   - Firebase updateChildren().        │
+         │                              │         │ User.updateAvatarUrl()                │
+         │ Monster.takeDamage()         │         │   - Firebase updateChildren().        │
+         │ - Firebase updateChildren()  │         │ User.addMonster()                     │
+         │   (currentHp sync)           │         │   - Firebase .get() + setValue().     │
+         │                              │         │ User.removeMonster()                  │
+         │ Monster.setOwner()           │         │   - Firebase .get() + updateChildren()│
+         │ - Firebase setValue()        │         │ User.setUserActiveMonster()           │
+         │                              │         │   - Firebase updateChildren().        │
+         │ Monster.levelUp()            │         │ User.addItem()                        │
+         │ - syncHpToFirebase()         │         │   - Firebase .get() + updateBag().    │
+         │                              │         │ User.removeByItemName()               │
+         │ Monster.healDamage()         │         │   - Firebase .get() + updateBag().    │
+         │ - syncHpToFirebase()         │         │ User.updateBag()                      │
+         └──────────────────────────────┘         │   - Firebase updateChildren().        │
+                                                  └───────────────────────────────────────┘
 
-
-User Firebase Functions
+DuelRequest Firebase Operations
 ┌──────────────────────────────────────────┐
-│ User.fetchById()                          │──► Firebase thread
-│ User.addMonster()                         │──► Firebase write thread
-│ User.updateLocation()                     │──► Firebase write thread
-│ AuthManager.signInAnonymously()           │──► Firebase Auth thread
+│ DuelRequest.create()                     │──► Firebase thread
+│   - suspendCoroutine                     │
+│   - push().setValue()                    │
+│ DuelRequest.updateStatus()               │──► Firebase thread
+│   - updateChildren()                     │
+│ DuelRequest.setBattleReady()             │──► Firebase thread
+│   - updateChildren()                     │
+│ DuelRequest.delete()                     │──► Firebase thread
+│   - removeValue()                        │
+│                                          │
+│ MainActivity.setupDuelRequestListener()  │
+│   - ValueEventListener                   │──► Firebase thread
+│   - onDataChange callback                │──► Main thread
+│   - showDuelChallengeDialog()            │
 └──────────────────────────────────────────┘
 
+BattleState Firebase Operations
+┌──────────────────────────────────────────┐
+│ BattleState.create()                     │──► Firebase thread
+│   - suspendCoroutine                     │
+│   - push().setValue()                    │
+│ BattleState.updateMove()                 │──► Firebase thread
+│   - .get() + updateChildren()            │
+│ BattleState.updateHpAndNextTurn()        │──► Firebase thread
+│   - updateChildren()                     │
+│   - includes: player1Hp, player2Hp,      │
+│     currentTurn, lastMove, lastMoveUser  │
+│ BattleState.finishBattle()               │──► Firebase thread
+│   - updateChildren()                     │
+│ BattleState.delete()                     │──► Firebase thread
+│   - removeValue()                        │
+│                                          │
+│ BattleActivity.setupBattleStateListener()│
+│   - ValueEventListener                   │──► Firebase thread
+│   - onDataChange callback                │──► Main thread
+│   - updateHpFromBattleState()            │
+│   - timestamp checking                   │
+└──────────────────────────────────────────┘
+
+AuthManager Firebase Operations
+┌──────────────────────────────────────────┐
+│ signInAnonymously()                      │
+│   - suspendCoroutine                     │──► Firebase Auth thread
+│   - auth.signInAnonymously()             │
+│   - resume on callback                   │
+│ signOut()                                │──► Firebase Auth thread
+│ addAuthStateListener()                   │
+│ removeAuthStateListener()                │
+└──────────────────────────────────────────┘
+
+Firebase Storage (Avatar Upload)
+┌──────────────────────────────────────────┐
+│ ChangeAvatarDialogFragment               │
+│ - uploadAvatar()                         │
+│   - lifecycleScope.launch                │
+│   - putFile(uri).await()                 │──► Storage thread
+│   - getDownloadUrl().await()             │──► Storage thread
+│   - User.updateAvatarUrl()               │──► Firebase thread
+└──────────────────────────────────────────┘
 
 ───────────────────────────────────────────────────────────────────────────────
                            LOCATION SERVICE THREADING
@@ -398,22 +569,175 @@ GPS/Location Provider Thread
 │ - onStartCommand()                       │
 │ - requestLocationUpdates()               │
 │   (callback on NON-UI location thread)   │
+│ - onLocationChanged(location)            │
+│   (called on location thread)            │
+│   → creates Bundle                       │
+│   → sends Message to Handler             │──► Main thread via Handler
 └──────────────────────────────────────────┘
                     │
                     ▼
      TrackingMessageHandler (MAIN THREAD)
-     │ - handler.receiveMessage()  
-     │ - updates TrackingViewModel._latLng  
+     │ - handleMessage(msg)  
+     │ - extracts lat/lng from Bundle
+     │ - updates TrackingViewModel._latLng (MutableLiveData)
      ▼
-UI THREAD observes latLng updates → Map auto-updates
-    </pre>
+UI THREAD observes latLng.value changes
+     │ - MainActivity.updateMap()
+     │   - CameraUpdateFactory.newLatLngZoom()
+     │   - googleMap.animateCamera()
+     │   - update player marker with direction icon
+     │   - User.updateLocation()               ──► Firebase thread
+     │   - checkAndSpawnMonsters()
+     │   - checkAndSpawnItems()
+     │   - displayOtherPlayers()
+     │   - calculateDirection()
+
+───────────────────────────────────────────────────────────────────────────────
+                         MULTIPLAYER THREADING (PvP)
+───────────────────────────────────────────────────────────────────────────────
+
+Other Players Display
+┌──────────────────────────────────────────┐
+│ MainActivity.displayOtherPlayers()       │
+│   - Firebase ValueEventListener          │──► Firebase thread
+│   - onDataChange callback                │──► Main thread
+│   - filter by lastActive (5 min)         │
+│   - filter by radius                     │
+│   - for each nearby player:              │
+│     - Glide.asBitmap().load(avatarUrl)   │──► Glide thread pool
+│       - CustomTarget callback            │──► Main thread
+│       - cache avatar bitmap              │
+│       - updateOtherPlayerMarker()        │
+│   - remove markers for departed players  │
+└──────────────────────────────────────────┘
+
+Duel Challenge Flow
+┌──────────────────────────────────────────┐
+│ 1. Marker Click (Other Player)           │──► Main thread
+│    - handlePlayerMarkerClick()           │
+│      - lifecycleScope.launch             │
+│      - User.fetchById (current & target) │──► Firebase thread
+│      - Monster.fetchById (check fainted) │──► Firebase thread
+│      - show AlertDialog (challenge)      │──► Main thread
+│      - sendDuelRequest()                 │
+│        - DuelRequest.create()            │──► Firebase thread
+│                                          │
+│ 2. Receive Challenge                     │
+│    - setupDuelRequestListener()          │──► Firebase thread
+│      - ValueEventListener.onDataChange   │──► Main thread
+│      - showDuelChallengeDialog()         │──► Main thread
+│      - on Accept:                        │
+│        - lifecycleScope.launch           │
+│        - check active monster            │──► Firebase thread
+│        - DuelRequest.updateStatus()      │──► Firebase thread
+│                                          │
+│ 3. Create Battle                         │
+│    - challenger sees "accepted" status   │──► Firebase listener
+│    - createBattleState()                 │
+│      - lifecycleScope.launch             │
+│      - User.fetchById (both players)     │──► Firebase thread
+│      - Monster.fetchById (both monsters) │──► Firebase thread
+│      - BattleState.create()              │──► Firebase thread
+│      - DuelRequest.setBattleReady()      │──► Firebase thread
+│                                          │
+│ 4. Launch Battle                         │
+│    - both players see "battle_ready"     │──► Firebase listener
+│    - launchBattleFromRequest()           │
+│      - lifecycleScope.launch             │
+│      - User.fetchById (opponent)         │──► Firebase thread
+│      - startActivity(BattleActivity)     │──► Main thread
+│      - DuelRequest.delete()              │──► Firebase thread
+└──────────────────────────────────────────┘
+
+PvP Battle Synchronization
+┌──────────────────────────────────────────┐
+│ BattleActivity (PvP Mode)                │
+│                                          │
+│ setupBattleStateListener()               │
+│   - ValueEventListener                   │──► Firebase thread
+│   - onDataChange callback                │──► Main thread
+│   - check lastMoveTimestamp              │
+│   - updateHpFromBattleState()            │
+│   - determine isMyTurn                   │
+│   - if opponent moved:                   │
+│     - show opponent's move               │
+│     - update HP displays                 │
+│     - check if battle finished           │
+│   - if myTurn:                           │
+│     - enable move buttons                │
+│                                          │
+│ handlePvPMoveSelection()                 │
+│   - check isMyTurn                       │──► Main thread
+│   - lifecycleScope.launch                │
+│   - Move.initializeByName()              │──► Room thread
+│   - performAttack()                      │
+│   - delay(1000)                          │
+│   - BattleState.updateHpAndNextTurn()    │──► Firebase thread
+│   - checkBattleEnd()                     │
+│                                          │
+│ checkBattleEnd()                         │
+│   - if monster fainted:                  │
+│     - BattleState.finishBattle()         │──► Firebase thread
+│     - handlePvPVictory() / Defeat()      │
+│       - User.removeByItemName()          │──► Firebase thread
+│       - User.addItem()                   │──► Firebase thread
+│     - delay(2000)                        │
+│     - finish()                           │──► Main thread
+└──────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────────────────────
+                          AI CHAT THREADING (GEMINI API)
+───────────────────────────────────────────────────────────────────────────────
+
+GeminiAPI
+┌──────────────────────────────────────────┐
+│ generateContent(prompt)                  │
+│   - withContext(Dispatchers.IO)          │──► IO thread
+│   - HttpURLConnection setup              │
+│   - POST to Gemini API                   │──► Network thread
+│   - read response                        │
+│   - parseResponse(json)                  │
+│   - return text                          │
+└──────────────────────────────────────────┘
+
+MonsterAI
+┌──────────────────────────────────────────┐
+│ initialize(context)                      │──► Main thread
+│   - read API key from manifest           │
+│   - GeminiAPI.setApiKey()                │
+│                                          │
+│ getChatResponse()                        │
+│   - withContext(Dispatchers.IO)          │──► IO thread
+│   - buildChatPrompt()                    │
+│   - GeminiAPI.generateContent()          │──► IO thread
+│   - return response                      │
+└──────────────────────────────────────────┘
+
+MonsterChatDialogFragment
+┌──────────────────────────────────────────┐
+│ loadMonsterData()                        │
+│   - lifecycleScope.launch(IO)            │──► IO thread
+│   - Monster.fetchById()                  │──► Firebase thread
+│   - withContext(Main)                    │──► Main thread
+│   - generateWelcomeMessage()             │
+│                                          │
+│ sendMessage()                            │──► Main thread
+│   - showLoading(true)                    │
+│   - lifecycleScope.launch                │
+│   - MonsterAI.getChatResponse()          │──► IO thread
+│   - addMonsterMessage()                  │──► Main thread
+│   - showLoading(false)                   │
+└──────────────────────────────────────────┘
+
+</pre>
+
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
       </div>
     </div>
 
     <!-- Paper video. -->
-    <div class="columns is-centered has-text-centered">
+    <!-- <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
         <h2 class="title is-3">MVVM diagram</h2>
         <div class="publication-video">
@@ -422,7 +746,7 @@ UI THREAD observes latLng updates → Map auto-updates
                  alt="MVVM diagram"/>
         </div>
       </div>
-    </div>
+    </div> -->
     <!--/ Paper video. -->
   </div>
 </section>
